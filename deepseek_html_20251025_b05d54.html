@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Sea Miner | Těžba v Hlubinách</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: manipulation;
+        }
+
+        :root {
+            --bg-primary: linear-gradient(135deg, #001f3f, #003366);
+            --bg-secondary: rgba(255, 255, 255, 0.95);
+            --text-primary: #001f3f;
+            --text-secondary: #003366;
+            --accent-color: #00bfff;
+            --border-color: #0074b7;
+            --button-bg: linear-gradient(135deg, #005a9e, #003d6b);
+            --ocean-bg: #001f3f;
+            --water-color: rgba(0, 123, 255, 0.2);
+            --resource-common: #4caf50;
+            --resource-rare: #ff9800;
+            --resource-epic: #9c27b0;
+            --resource-legendary: #ffd700;
+            --resource-trash: #795548;
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode {
+            --bg-primary: linear-gradient(135deg, #000814, #001f3f);
+            --bg-secondary: rgba(20, 30, 48, 0.95);
+            --text-primary: #e6f7ff;
+            --text-secondary: #b3e0ff;
+            --accent-color: #00bfff;
+            --border-color: #005a9e;
+            --button-bg: linear-gradient(135deg, #004d80, #003d6b);
+            --ocean-bg: #000814;
+            --water-color: rgba(0, 123, 255, 0.15);
+            --resource-common: #66bb6a;
+            --resource-rare: #ffb74d;
+            --resource-epic: #ba68c8;
+            --resource-legendary: #ffeb3b;
+            --resource-trash: #8d6e63;
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* Lobby Screen */
+        .lobby-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .lobby-title {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 0 20px var(--accent-color);
+            font-weight: bold;
+        }
+
+        .lobby-subtitle {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .currency-selector {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .currency-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .currency-btn.active {
+            background: var(--button-bg);
+            border-color: var(--accent-color);
+        }
+
+        .lobby-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .lobby-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: var(--button-bg);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .lobby-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .save-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 15px;
+        }
+
+        .save-slot {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .save-slot:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .save-slot.empty {
+            opacity: 0.7;
+            border-style: dashed;
+        }
+
+        .save-info {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        .slot-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .slot-actions button {
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            border-radius: 8px;
+        }
+
+        /* Main Game */
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            text-align: center;
+        }
+
+        header {
+            margin-bottom: 15px;
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+            text-shadow: 1px 1px 0 var(--accent-color);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .game-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--button-bg);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .depth-info {
+            background: var(--ocean-bg);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 12px 0;
+            border: 2px solid var(--border-color);
+        }
+
+        .depth-level {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .depth-bar {
+            width: 100%;
+            height: 16px;
+            background: #003366;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .depth-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00bfff, #0074b7);
+            border-radius: 8px;
+            transition: width 0.5s ease;
+        }
+
+        /* Povrchová zpráva */
+        .surface-message {
+            background: var(--ocean-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid var(--border-color);
+            text-align: center;
+        }
+
+        .surface-message i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .surface-message h3 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .surface-message p {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        .mining-area {
+            background: var(--ocean-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mining-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--water-color);
+            pointer-events: none;
+        }
+
+        .mining-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 0 auto;
+            max-width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mining-cell {
+            width: 65px;
+            height: 65px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            background: rgba(0, 91, 158, 0.3);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 8px rgba(0, 123, 255, 0.3);
+            padding: 4px;
+            border: 2px solid rgba(0, 123, 255, 0.5);
+        }
+
+        .mining-cell:hover {
+            transform: scale(1.03);
+            border-color: var(--accent-color);
+        }
+
+        .mining-cell.common { background: rgba(76, 175, 80, 0.3); border-color: var(--resource-common); }
+        .mining-cell.rare { background: rgba(255, 152, 0, 0.3); border-color: var(--resource-rare); }
+        .mining-cell.epic { background: rgba(156, 39, 176, 0.3); border-color: var(--resource-epic); }
+        .mining-cell.legendary { background: rgba(255, 215, 0, 0.3); border-color: var(--resource-legendary); }
+        .mining-cell.trash { background: rgba(121, 85, 72, 0.3); border-color: var(--resource-trash); }
+
+        .mining-cell.mined {
+            background: rgba(100, 100, 100, 0.3);
+            border-color: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .resource-value {
+            font-size: 0.6rem;
+            margin-top: 3px;
+            font-weight: bold;
+        }
+
+        .common { color: var(--resource-common); }
+        .rare { color: var(--resource-rare); }
+        .epic { color: var(--resource-epic); }
+        .legendary { color: var(--resource-legendary); }
+        .trash { color: var(--resource-trash); }
+
+        .upgrades-shop {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin: 12px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .upgrade-item {
+            background: var(--bg-secondary);
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .upgrade-item:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .upgrade-item.purchased {
+            border-color: var(--resource-common);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .upgrade-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .upgrade-cost {
+            font-size: 0.7rem;
+            color: #e53935;
+            font-weight: bold;
+        }
+
+        .upgrade-description {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .upgrade-stats {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 20px;
+            background: var(--button-bg);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .dive-deeper {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+
+        .surface {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+
+        .market {
+            background: linear-gradient(135deg, #0288d1, #01579b);
+        }
+
+        .lobby-btn {
+            background: linear-gradient(135deg, #7b1fa2, #4a148c);
+        }
+
+        .inventory {
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border: 2px dashed #0288d1;
+            font-size: 0.8rem;
+        }
+
+        .dark-mode .inventory {
+            background: #1a237e;
+        }
+
+        .inventory-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 6px;
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+        }
+
+        .dark-mode .inventory-item {
+            background: #2a2a4a;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 0.8rem;
+            border: 2px dashed #4fc3f7;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .dark-mode .instructions {
+            background: #1a237e;
+        }
+
+        .instructions h3 {
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+
+        .instructions li::before {
+            content: "⚡";
+            margin-right: 6px;
+        }
+
+        footer {
+            margin-top: 15px;
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 0.7rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(2, 136, 209, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: none;
+        }
+
+        .save-indicator.show {
+            transform: translateY(0);
+        }
+
+        @keyframes resourceGlow {
+            0% { box-shadow: 0 0 3px currentColor; }
+            50% { box-shadow: 0 0 12px currentColor; }
+            100% { box-shadow: 0 0 3px currentColor; }
+        }
+
+        .mining-cell:not(.mined) {
+            animation: resourceGlow 2s ease-in-out infinite;
+        }
+
+        /* Responzivní design pro telefony */
+        @media (max-width: 480px) {
+            .mining-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .mining-cell {
+                width: 70px;
+                height: 70px;
+                font-size: 1.3rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                padding: 12px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .surface-message {
+                padding: 15px;
+            }
+            
+            .surface-message i {
+                font-size: 2.5rem;
+            }
+            
+            .surface-message h3 {
+                font-size: 1.1rem;
+            }
+            
+            .surface-message p {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .mining-cell {
+                width: 60px;
+                height: 60px;
+                font-size: 1.1rem;
+            }
+            
+            .mining-grid {
+                gap: 6px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .mining-cell {
+                width: 55px;
+                height: 55px;
+                font-size: 1rem;
+            }
+            
+            .mining-grid {
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Lobby Screen -->
+    <div class="lobby-screen" id="lobby-screen">
+        <h1 class="lobby-title">DEEP SEA MINER</h1>
+        <p class="lobby-subtitle">Těžba v hlubinách oceánu</p>
+        
+        <div class="currency-selector">
+            <button class="currency-btn active" data-currency="CZK">Kč</button>
+            <button class="currency-btn" data-currency="USD">$</button>
+        </div>
+        
+        <div class="lobby-buttons">
+            <button class="lobby-button" id="continue-game">
+                <i class="fas fa-play"></i> Pokračovat
+            </button>
+            <button class="lobby-button" id="show-saves">
+                <i class="fas fa-hard-hat"></i> Těžební Stanice
+            </button>
+        </div>
+        <div class="save-slots" id="save-slots-lobby" style="display: none;"></div>
+    </div>
+
+    <!-- Main Game -->
+    <div class="game-screen" id="game-screen">
+        <div class="container">
+            <header>
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <h1>DEEP SEA MINER <i class="fas fa-hard-hat"></i></h1>
+                <p class="subtitle">Těž vzácné zdroje z hlubin oceánu!</p>
+            </header>
+
+            <div class="game-container">
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <div class="stat-label" id="currency-label">KORUNY</div>
+                        <div class="stat-value" id="money">1,000</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">ENERGIE</div>
+                        <div class="stat-value" id="energy">100/100</div>
+                    </div>
+                </div>
+
+                <div class="depth-info">
+                    <div class="depth-level">
+                        <span>Hloubka: <strong id="depth">0m</strong></span>
+                        <span>Level: <strong id="level">0</strong>/100</span>
+                    </div>
+                    <div class="depth-bar">
+                        <div class="depth-progress" id="depth-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="inventory">
+                    <strong>Vytěžené zdroje:</strong>
+                    <div class="inventory-items" id="inventory-items"></div>
+                </div>
+
+                <div class="controls">
+                    <button id="dive-deeper" class="dive-deeper">
+                        <i class="fas fa-arrow-down"></i> Ponor Hlouběji
+                    </button>
+                    <button id="surface" class="surface">
+                        <i class="fas fa-arrow-up"></i> Návrat na Povrch
+                    </button>
+                    <button id="market" class="market">
+                        <i class="fas fa-coins"></i> Prodej Zdroje
+                    </button>
+                    <button id="lobby" class="lobby-btn">
+                        <i class="fas fa-home"></i> Základna
+                    </button>
+                </div>
+
+                <!-- Povrchová zpráva -->
+                <div class="surface-message" id="surface-message">
+                    <i class="fas fa-sun"></i>
+                    <h3>Jsi na povrchu</h3>
+                    <p>Energie byla doplněna. Použij "Ponor Hlouběji" k začátku těžby.</p>
+                </div>
+
+                <!-- Těžební oblast -->
+                <div id="mining-section">
+                    <h3><i class="fas fa-gem"></i> Těžební Oblast (Level <span id="current-level">0</span>)</h3>
+                    <div class="mining-area" id="mining-area">
+                        <div class="mining-grid" id="mining-grid"></div>
+                    </div>
+                </div>
+
+                <h3><i class="fas fa-tools"></i> Vylepšení Ponorky</h3>
+                <div class="upgrades-shop" id="upgrades-shop"></div>
+            </div>
+
+            <div class="instructions">
+                <h3>Jak těžit:</h3>
+                <ul>
+                    <li>Klikni na "Ponor Hlouběji" k začátku těžby</li>
+                    <li>Každá těžba spotřebovává energii</li>
+                    <li>Vrátit se na povrch doplní energii a skryje těžební oblast</li>
+                    <li>Čím hlouběji, tím lepší zdroje, ale více energie</li>
+                    <li>Vylepšuj ponorku pro vyšší výkon</li>
+                    <li>Prodej zdroje na trhu za peníze</li>
+                </ul>
+            </div>
+
+            <footer>
+                <p>Deep Sea Miner - Těžba v hlubinách &copy; 2024</p>
+            </footer>
+        </div>
+
+        <div class="save-indicator" id="save-indicator">
+            <i class="fas fa-check"></i> Stav uložen!
+        </div>
+    </div>
+
+    <script>
+        // Herní konstanty
+        const INITIAL_MONEY = 1000;
+        const INITIAL_ENERGY = 100;
+        const INITIAL_DEPTH = 0; // LEVEL 0 - POVRCH
+        const MAX_DEPTH_LEVEL = 100;
+        const SAVE_KEY_PREFIX = 'deep_sea_miner_save_';
+        const THEME_KEY = 'deep_sea_miner_theme';
+        const CURRENCY_KEY = 'deep_sea_currency';
+        const CURRENT_SAVE_SLOT_KEY = 'deep_sea_miner_current_slot';
+        const MAX_SAVE_SLOTS = 2;
+
+        // Měnové kurzy
+        const CURRENCY_RATES = {
+            'CZK': { symbol: 'Kč', rate: 1 },
+            'USD': { symbol: '$', rate: 0.044 }
+        };
+
+        // Typy zdrojů
+        const resources = [
+            // Bordel - levné věci (většina na levelu 0)
+            { id: 1, name: 'Kamení', icon: '🪨', value: 5, rarity: 'trash', energyCost: 2 },
+            { id: 2, name: 'Písek', icon: '🏖️', value: 3, rarity: 'trash', energyCost: 1 },
+            { id: 3, name: 'Škeble', icon: '🐚', value: 8, rarity: 'trash', energyCost: 3 },
+            { id: 4, name: 'Řasy', icon: '🌿', value: 2, rarity: 'trash', energyCost: 1 },
+            
+            // Běžné kovy (objevují se od levelu 1)
+            { id: 5, name: 'Železo', icon: '🪙', value: 50, rarity: 'common', energyCost: 5 },
+            { id: 6, name: 'Měď', icon: '🔶', value: 80, rarity: 'common', energyCost: 6 },
+            
+            // Vzácné kovy a kameny (od levelu 5)
+            { id: 7, name: 'Stříbro', icon: '⚪', value: 200, rarity: 'rare', energyCost: 10 },
+            { id: 8, name: 'Zlato', icon: '🟡', value: 500, rarity: 'rare', energyCost: 12 },
+            
+            // Epic zdroje (od levelu 10)
+            { id: 9, name: 'Smaragdy', icon: '💚', value: 800, rarity: 'epic', energyCost: 15 },
+            { id: 10, name: 'Rubíny', icon: '❤️', value: 1200, rarity: 'epic', energyCost: 18 },
+            
+            // Legendární (od levelu 20)
+            { id: 11, name: 'Diamanty', icon: '💎', value: 3000, rarity: 'legendary', energyCost: 25 },
+            { id: 12, name: 'Platina', icon: '🔘', value: 2000, rarity: 'legendary', energyCost: 22 }
+        ];
+
+        // Vylepšení
+        const upgrades = [
+            { id: 1, name: 'Baterie', icon: '🔋', baseCost: 500, costMultiplier: 1.5, description: '+20 maximální energie', effect: 'maxEnergy', value: 20 },
+            { id: 2, name: 'Super Baterie', icon: '⚡', baseCost: 1000, costMultiplier: 1.8, description: '+50 maximální energie', effect: 'maxEnergy', value: 50 },
+            { id: 3, name: 'Úsporný režim', icon: '💡', baseCost: 800, costMultiplier: 1.6, description: '-10% spotřeba energie', effect: 'efficiency', value: 0.9 },
+            { id: 4, name: 'Optimalizace', icon: '🎯', baseCost: 1500, costMultiplier: 1.7, description: '-20% spotřeba energie', effect: 'efficiency', value: 0.8 },
+            { id: 5, name: 'Základní sonar', icon: '📡', baseCost: 1200, costMultiplier: 1.9, description: '+15% šance na vzácné zdroje', effect: 'luck', value: 1.15 },
+            { id: 6, name: 'Pokročilý sonar', icon: '📟', baseCost: 2500, costMultiplier: 2.0, description: '+30% šance na vzácné zdroje', effect: 'luck', value: 1.3 },
+            { id: 7, name: 'Rychlá vrtačka', icon: '⛏️', baseCost: 1000, costMultiplier: 1.7, description: '+10% rychlost těžby', effect: 'speed', value: 1.1 },
+            { id: 8, name: 'Turbo vrtačka', icon: '🚀', baseCost: 2000, costMultiplier: 1.8, description: '+25% rychlost těžby', effect: 'speed', value: 1.25 },
+            { id: 9, name: 'Obchodní dohody', icon: '🤝', baseCost: 1500, costMultiplier: 1.6, description: '+10% cena zdrojů', effect: 'sellMultiplier', value: 1.1 },
+            { id: 10, name: 'Exkluzivní smlouvy', icon: '📑', baseCost: 3000, costMultiplier: 1.7, description: '+25% cena zdrojů', effect: 'sellMultiplier', value: 1.25 }
+        ];
+
+        // Stav hry
+        let gameState = {
+            money: INITIAL_MONEY,
+            energy: INITIAL_ENERGY,
+            maxEnergy: INITIAL_ENERGY,
+            depth: INITIAL_DEPTH, // LEVEL 0
+            upgrades: {},
+            inventory: {},
+            miningArea: [],
+            currentSaveSlot: 1,
+            currency: 'CZK',
+            efficiency: 1.0,
+            luck: 1.0,
+            speed: 1.0,
+            sellMultiplier: 1.0,
+            depthEfficiency: 1.0
+        };
+
+        // DOM elementy
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const continueGameBtn = document.getElementById('continue-game');
+        const showSavesBtn = document.getElementById('show-saves');
+        const saveSlotsLobby = document.getElementById('save-slots-lobby');
+        const themeToggle = document.getElementById('theme-toggle');
+        const moneyElement = document.getElementById('money');
+        const energyElement = document.getElementById('energy');
+        const depthElement = document.getElementById('depth');
+        const levelElement = document.getElementById('level');
+        const depthProgress = document.getElementById('depth-progress');
+        const currentLevelElement = document.getElementById('current-level');
+        const currencyLabel = document.getElementById('currency-label');
+        const miningGrid = document.getElementById('mining-grid');
+        const miningSection = document.getElementById('mining-section');
+        const surfaceMessage = document.getElementById('surface-message');
+        const upgradesShop = document.getElementById('upgrades-shop');
+        const inventoryItems = document.getElementById('inventory-items');
+        const diveDeeperBtn = document.getElementById('dive-deeper');
+        const surfaceBtn = document.getElementById('surface');
+        const marketBtn = document.getElementById('market');
+        const lobbyBtn = document.getElementById('lobby');
+        const saveIndicator = document.getElementById('save-indicator');
+        const currencyBtns = document.querySelectorAll('.currency-btn');
+
+        // Inicializace hry
+        function init() {
+            console.log("Inicializace Deep Sea Miner...");
+            setupEventListeners();
+            loadTheme();
+            loadCurrency();
+            renderSaveSlotsLobby();
+        }
+
+        // Načtení tématu
+        function loadTheme() {
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        // Načtení měny
+        function loadCurrency() {
+            const savedCurrency = localStorage.getItem(CURRENCY_KEY) || 'CZK';
+            gameState.currency = savedCurrency;
+            updateCurrencyButtons();
+            updateCurrencyDisplay();
+        }
+
+        // Aktualizace tlačítek měny
+        function updateCurrencyButtons() {
+            currencyBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.currency === gameState.currency);
+            });
+        }
+
+        // Aktualizace zobrazení měny
+        function updateCurrencyDisplay() {
+            const currencyInfo = CURRENCY_RATES[gameState.currency];
+            currencyLabel.textContent = currencyInfo.symbol;
+        }
+
+        // Převod měny
+        function convertCurrency(amount) {
+            const rate = CURRENCY_RATES[gameState.currency].rate;
+            return Math.floor(amount * rate);
+        }
+
+        // Formátování peněz
+        function formatMoney(amount) {
+            const converted = convertCurrency(amount);
+            return converted.toLocaleString();
+        }
+
+        // Vykreslení save slotů v lobby
+        function renderSaveSlotsLobby() {
+            saveSlotsLobby.innerHTML = '';
+            
+            for (let i = 1; i <= MAX_SAVE_SLOTS; i++) {
+                const saveKey = SAVE_KEY_PREFIX + i;
+                const savedGame = localStorage.getItem(saveKey);
+                let slotInfo = 'Prázdná stanice';
+                
+                if (savedGame) {
+                    try {
+                        const gameData = JSON.parse(savedGame);
+                        const currencyInfo = CURRENCY_RATES[gameState.currency];
+                        const money = Math.floor(gameData.money * currencyInfo.rate);
+                        slotInfo = `Level: ${gameData.depth}, ${money}${currencyInfo.symbol}`;
+                    } catch (e) {
+                        slotInfo = 'Poškozený záznam';
+                    }
+                }
+                
+                const slotElement = document.createElement('div');
+                slotElement.className = `save-slot ${savedGame ? '' : 'empty'}`;
+                slotElement.innerHTML = `
+                    <div style="font-weight: bold; font-size: 1rem;">Stanice ${i}</div>
+                    <div class="save-info">${slotInfo}</div>
+                    <div class="slot-actions">
+                        <button class="load-slot" data-slot="${i}">Načíst</button>
+                        ${savedGame ? `<button class="reset-slot" data-slot="${i}">Reset</button>` : ''}
+                    </div>
+                `;
+                
+                saveSlotsLobby.appendChild(slotElement);
+            }
+
+            document.querySelectorAll('.load-slot').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const slot = parseInt(e.target.dataset.slot);
+                    loadFromSlot(slot);
+                });
+            });
+
+            document.querySelectorAll('.reset-slot').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const slot = parseInt(e.target.dataset.slot);
+                    if (confirm(`Opravdu chceš resetovat stanici ${slot}?`)) {
+                        resetSlot(slot);
+                    }
+                });
+            });
+        }
+
+        // Reset slotu
+        function resetSlot(slot) {
+            const saveKey = SAVE_KEY_PREFIX + slot;
+            localStorage.removeItem(saveKey);
+            renderSaveSlotsLobby();
+            showSaveIndicator(`Stanice ${slot} resetována!`);
+        }
+
+        // Načtení ze slotu
+        function loadFromSlot(slot) {
+            gameState.currentSaveSlot = slot;
+            localStorage.setItem(CURRENT_SAVE_SLOT_KEY, slot.toString());
+            startGame();
+        }
+
+        // Spuštění hry
+        function startGame() {
+            loadGame();
+            lobbyScreen.style.display = 'none';
+            gameScreen.style.display = 'flex';
+            updateUI();
+            updateMiningVisibility();
+            renderUpgrades();
+            showSaveIndicator('Stanice aktivována!');
+        }
+
+        // Načtení hry
+        function loadGame() {
+            const currentSlot = localStorage.getItem(CURRENT_SAVE_SLOT_KEY) || '1';
+            gameState.currentSaveSlot = parseInt(currentSlot);
+            
+            const saveKey = SAVE_KEY_PREFIX + gameState.currentSaveSlot;
+            const savedGame = localStorage.getItem(saveKey);
+            
+            if (savedGame) {
+                try {
+                    const parsedGame = JSON.parse(savedGame);
+                    gameState = { ...gameState, ...parsedGame };
+                    console.log("Hra načtena:", gameState);
+                } catch (e) {
+                    console.log("Chyba při načítání, inicializuji novou hru");
+                    initializeNewGame();
+                }
+            } else {
+                console.log("Žádná uložená hra, inicializuji novou");
+                initializeNewGame();
+            }
+        }
+
+        // Inicializace nové hry
+        function initializeNewGame() {
+            gameState = {
+                money: INITIAL_MONEY,
+                energy: INITIAL_ENERGY,
+                maxEnergy: INITIAL_ENERGY,
+                depth: INITIAL_DEPTH, // LEVEL 0
+                upgrades: {},
+                inventory: {},
+                miningArea: [],
+                currentSaveSlot: gameState.currentSaveSlot || 1,
+                currency: gameState.currency,
+                efficiency: 1.0,
+                luck: 1.0,
+                speed: 1.0,
+                sellMultiplier: 1.0,
+                depthEfficiency: 1.0
+            };
+            saveGame();
+        }
+
+        // Aktualizace viditelnosti těžební oblasti
+        function updateMiningVisibility() {
+            if (gameState.depth === 0) {
+                // Na povrchu - skrýt těžební oblast, ukázat zprávu
+                miningSection.style.display = 'none';
+                surfaceMessage.style.display = 'block';
+            } else {
+                // Pod vodou (level 1+) - ukázat těžební oblast, skrýt zprávu
+                miningSection.style.display = 'block';
+                surfaceMessage.style.display = 'none';
+                generateMiningArea();
+                renderMiningArea();
+            }
+        }
+
+        // Generování těžební oblasti podle levelu
+        function generateMiningArea() {
+            gameState.miningArea = [];
+            const cellCount = 12;
+            
+            for (let i = 0; i < cellCount; i++) {
+                const resource = getRandomResourceForLevel(gameState.depth);
+                gameState.miningArea.push({
+                    id: i,
+                    resource: resource,
+                    mined: false
+                });
+            }
+        }
+
+        // Náhodný výběr zdroje podle levelu
+        function getRandomResourceForLevel(level) {
+            // Level 0 = pouze "bordel"
+            if (level === 0) {
+                const trashResources = resources.filter(r => r.rarity === 'trash');
+                return trashResources[Math.floor(Math.random() * trashResources.length)];
+            }
+
+            // Šance podle levelu
+            const baseChances = {
+                trash: Math.max(0.4 - (level * 0.01), 0.05),
+                common: 0.3 - (level * 0.005),
+                rare: 0.2 + (level * 0.005),
+                epic: 0.08 + (level * 0.003),
+                legendary: 0.02 + (level * 0.002)
+            };
+
+            // Aplikace bonusů
+            baseChances.rare *= gameState.luck;
+            baseChances.epic *= gameState.luck;
+            baseChances.legendary *= gameState.luck;
+
+            // Normalizace šancí
+            const total = Object.values(baseChances).reduce((sum, chance) => sum + chance, 0);
+            const random = Math.random() * total;
+
+            let current = 0;
+            const rarities = ['trash', 'common', 'rare', 'epic', 'legendary'];
+            
+            for (const rarity of rarities) {
+                current += baseChances[rarity];
+                if (random < current) {
+                    const resourcesOfRarity = resources.filter(r => r.rarity === rarity);
+                    // Filtrování podle minimálního levelu
+                    const availableResources = resourcesOfRarity.filter(r => {
+                        if (rarity === 'common' && level < 1) return false;
+                        if (rarity === 'rare' && level < 5) return false;
+                        if (rarity === 'epic' && level < 10) return false;
+                        if (rarity === 'legendary' && level < 20) return false;
+                        return true;
+                    });
+                    
+                    // Pokud žádné zdroje nejsou dostupné, použij common
+                    if (availableResources.length === 0) {
+                        const commonResources = resources.filter(r => r.rarity === 'common' && level >= 1);
+                        return commonResources.length > 0 ? commonResources[0] : resources.filter(r => r.rarity === 'trash')[0];
+                    }
+                    
+                    return availableResources[Math.floor(Math.random() * availableResources.length)];
+                }
+            }
+
+            // Fallback na trash
+            return resources.filter(r => r.rarity === 'trash')[0];
+        }
+
+        // Vykreslení těžební oblasti
+        function renderMiningArea() {
+            miningGrid.innerHTML = '';
+            currentLevelElement.textContent = gameState.depth;
+            
+            gameState.miningArea.forEach((cell, index) => {
+                const cellElement = document.createElement('div');
+                cellElement.className = `mining-cell ${cell.resource.rarity} ${cell.mined ? 'mined' : ''}`;
+                cellElement.innerHTML = `
+                    <div>${cell.resource.icon}</div>
+                    <div class="resource-value ${cell.resource.rarity}">${getEnergyCostForLevel(cell.resource.energyCost)}E</div>
+                `;
+                
+                if (!cell.mined) {
+                    cellElement.addEventListener('click', () => mineResource(index));
+                }
+                
+                miningGrid.appendChild(cellElement);
+            });
+        }
+
+        // Výpočet energie podle levelu
+        function getEnergyCostForLevel(baseCost) {
+            const levelMultiplier = 1 + (gameState.depth * 0.1);
+            const efficiencyMultiplier = gameState.efficiency * gameState.depthEfficiency;
+            return Math.floor(baseCost * levelMultiplier * efficiencyMultiplier);
+        }
+
+        // Těžba zdroje
+        function mineResource(index) {
+            const cell = gameState.miningArea[index];
+            const energyCost = getEnergyCostForLevel(cell.resource.energyCost);
+            
+            if (cell.mined || gameState.energy < energyCost) {
+                showSaveIndicator('Nedostatek energie!', true);
+                return;
+            }
+
+            gameState.energy -= energyCost;
+
+            if (!gameState.inventory[cell.resource.id]) {
+                gameState.inventory[cell.resource.id] = 0;
+            }
+            gameState.inventory[cell.resource.id]++;
+
+            cell.mined = true;
+
+            updateUI();
+            renderMiningArea();
+            renderInventory();
+            showSaveIndicator(`Vytěženo: ${cell.resource.name}`);
+
+            if (gameState.miningArea.every(cell => cell.mined)) {
+                setTimeout(() => {
+                    generateMiningArea();
+                    renderMiningArea();
+                    showSaveIndicator('Nová těžební oblast objevena!');
+                }, 1000);
+            }
+
+            saveGame();
+        }
+
+        // Ponor hlouběji
+        function diveDeeper() {
+            if (gameState.depth >= MAX_DEPTH_LEVEL) {
+                showSaveIndicator('Maximální hloubka dosažena!', true);
+                return;
+            }
+
+            const energyCost = Math.floor(20 + (gameState.depth * 2));
+            if (gameState.energy >= energyCost) {
+                gameState.depth++;
+                gameState.energy -= energyCost;
+                updateMiningVisibility();
+                updateUI();
+                showSaveIndicator(`Ponořeno do levelu ${gameState.depth}!`);
+                saveGame();
+            } else {
+                showSaveIndicator('Nedostatek energie pro ponor!', true);
+            }
+        }
+
+        // Návrat na povrch
+        function returnToSurface() {
+            gameState.depth = 0; // Vrátit na level 0
+            gameState.energy = gameState.maxEnergy; // Doplnit energii
+            updateMiningVisibility();
+            updateUI();
+            showSaveIndicator('Návrat na povrch! Energie doplněna.');
+            saveGame();
+        }
+
+        // Prodej zdrojů
+        function sellResources() {
+            let totalIncome = 0;
+            let soldItems = 0;
+
+            Object.keys(gameState.inventory).forEach(resourceId => {
+                const resource = resources.find(r => r.id === parseInt(resourceId));
+                const quantity = gameState.inventory[resourceId];
+                const income = resource.value * quantity * gameState.sellMultiplier;
+                
+                totalIncome += income;
+                soldItems += quantity;
+            });
+
+            if (totalIncome > 0) {
+                gameState.money += Math.floor(totalIncome);
+                gameState.inventory = {};
+                updateUI();
+                renderInventory();
+                showSaveIndicator(`Prodáno ${soldItems} zdrojů za ${formatMoney(totalIncome)}!`);
+                saveGame();
+            } else {
+                showSaveIndicator('Nemáš žádné zdroje k prodeji!', true);
+            }
+        }
+
+        // Nákup vylepšení
+        function buyUpgrade(upgradeId) {
+            const upgrade = upgrades.find(u => u.id === upgradeId);
+            const currentLevel = gameState.upgrades[upgradeId] || 0;
+            const cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel));
+            
+            if (gameState.money >= cost) {
+                gameState.money -= cost;
+                gameState.upgrades[upgradeId] = currentLevel + 1;
+                
+                switch (upgrade.effect) {
+                    case 'maxEnergy':
+                        gameState.maxEnergy += upgrade.value;
+                        gameState.energy = gameState.maxEnergy;
+                        break;
+                    case 'efficiency':
+                        gameState.efficiency *= upgrade.value;
+                        break;
+                    case 'luck':
+                        gameState.luck *= upgrade.value;
+                        break;
+                    case 'speed':
+                        gameState.speed *= upgrade.value;
+                        break;
+                    case 'sellMultiplier':
+                        gameState.sellMultiplier *= upgrade.value;
+                        break;
+                    case 'depthEfficiency':
+                        gameState.depthEfficiency *= upgrade.value;
+                        break;
+                }
+                
+                updateUI();
+                renderUpgrades();
+                showSaveIndicator(`Zakoupeno: ${upgrade.name} (úroveň ${currentLevel + 1})`);
+                saveGame();
+            } else {
+                showSaveIndicator('Nemáš dostatek peněz!', true);
+            }
+        }
+
+        // Vykreslení vylepšení
+        function renderUpgrades() {
+            upgradesShop.innerHTML = '';
+            upgrades.forEach(upgrade => {
+                const currentLevel = gameState.upgrades[upgrade.id] || 0;
+                const cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel));
+                const canAfford = gameState.money >= cost;
+                
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = `upgrade-item ${currentLevel > 0 ? 'purchased' : ''}`;
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-header">
+                        <div class="upgrade-name">
+                            ${upgrade.icon} ${upgrade.name} ${currentLevel > 0 ? `[${currentLevel}]` : ''}
+                        </div>
+                        <div class="upgrade-cost">${formatMoney(cost)}</div>
+                    </div>
+                    <div class="upgrade-description">${upgrade.description}</div>
+                    <div class="upgrade-stats">
+                        <span>Úroveň: ${currentLevel}</span>
+                        <button style="padding: 3px 8px; font-size: 0.6rem;" ${canAfford ? '' : 'disabled'}>Koupit</button>
+                    </div>
+                `;
+                
+                const buyButton = upgradeElement.querySelector('button');
+                buyButton.addEventListener('click', () => buyUpgrade(upgrade.id));
+                
+                upgradesShop.appendChild(upgradeElement);
+            });
+        }
+
+        // Vykreslení inventáře
+        function renderInventory() {
+            inventoryItems.innerHTML = '';
+            Object.keys(gameState.inventory).forEach(resourceId => {
+                const resource = resources.find(r => r.id === parseInt(resourceId));
+                const quantity = gameState.inventory[resourceId];
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = `inventory-item ${resource.rarity}`;
+                itemElement.innerHTML = `
+                    <span>${resource.icon}</span>
+                    <span>${resource.name}: ${quantity}</span>
+                `;
+                
+                inventoryItems.appendChild(itemElement);
+            });
+        }
+
+        // Aktualizace UI
+        function updateUI() {
+            moneyElement.textContent = formatMoney(gameState.money);
+            energyElement.textContent = `${gameState.energy}/${gameState.maxEnergy}`;
+            depthElement.textContent = `${gameState.depth * 100}m`;
+            levelElement.textContent = gameState.depth;
+            
+            // Progress hloubky
+            const progress = (gameState.depth / MAX_DEPTH_LEVEL) * 100;
+            depthProgress.style.width = `${progress}%`;
+        }
+
+        // Uložení hry
+        function saveGame() {
+            const saveKey = SAVE_KEY_PREFIX + gameState.currentSaveSlot;
+            localStorage.setItem(saveKey, JSON.stringify(gameState));
+        }
+
+        // Zobrazení indikátoru
+        function showSaveIndicator(message, isError = false) {
+            saveIndicator.textContent = message;
+            saveIndicator.style.background = isError ? 'rgba(244, 67, 54, 0.9)' : 'rgba(2, 136, 209, 0.9)';
+            saveIndicator.classList.add('show');
+            
+            setTimeout(() => {
+                saveIndicator.classList.remove('show');
+            }, 3000);
+        }
+
+        // Nastavení event listenerů
+        function setupEventListeners() {
+            themeToggle.addEventListener('click', toggleTheme);
+            diveDeeperBtn.addEventListener('click', diveDeeper);
+            surfaceBtn.addEventListener('click', returnToSurface);
+            marketBtn.addEventListener('click', sellResources);
+            lobbyBtn.addEventListener('click', returnToLobby);
+            continueGameBtn.addEventListener('click', startGame);
+            
+            showSavesBtn.addEventListener('click', function() {
+                const isVisible = saveSlotsLobby.style.display === 'block';
+                saveSlotsLobby.style.display = isVisible ? 'none' : 'block';
+                renderSaveSlotsLobby();
+            });
+
+            currencyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    gameState.currency = this.dataset.currency;
+                    localStorage.setItem(CURRENCY_KEY, gameState.currency);
+                    updateCurrencyButtons();
+                    updateCurrencyDisplay();
+                    updateUI();
+                    renderSaveSlotsLobby();
+                });
+            });
+        }
+
+        // Přepínání tématu
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                localStorage.setItem(THEME_KEY, 'dark');
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                localStorage.setItem(THEME_KEY, 'light');
+            }
+        }
+
+        // Návrat do lobby
+        function returnToLobby() {
+            saveGame();
+            gameScreen.style.display = 'none';
+            lobbyScreen.style.display = 'flex';
+            saveSlotsLobby.style.display = 'none';
+        }
+
+        // Spuštění inicializace
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
