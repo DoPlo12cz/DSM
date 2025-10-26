@@ -1616,7 +1616,7 @@
                 return;
             }
 
-            const cost = Math.floor(missingEnergy * 2); // 2 peníze za 1 energii
+            const cost = Math.floor(missingEnergy * 10); // 10 peníze za 1 energii
             if (gameState.money >= cost) {
                 gameState.money -= cost;
                 gameState.energy = gameState.maxEnergy;
